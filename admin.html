@@ -91,6 +91,32 @@
 
   <div class="container">
 
+    <div class="panel" id="previewPanel">
+      <h2>Live Preview <span class="hint">updates automatically as you edit</span></h2>
+      <div style="border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#eef0f7;">
+        <iframe id="previewFrame" src="./index.html" style="width:100%; height:640px; border:0; display:block;"></iframe>
+      </div>
+      <div class="save-row"><button class="btn" id="refreshPreviewBtn">Refresh preview</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>Appearance <span class="hint">changes reflect on the live page instantly</span></h2>
+      <div class="grid-2">
+        <div class="field"><label>Background base color</label><input id="tBg" placeholder="#f4f6fc"></div>
+        <div class="field"><label>Card / surface color</label><input id="tSurface" placeholder="#ffffff"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Accent — Indigo</label><input id="tIndigo" placeholder="#4f46e5"></div>
+        <div class="field"><label>Accent — Violet</label><input id="tViolet" placeholder="#8b5cf6"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Accent — Sky</label><input id="tSky" placeholder="#38bdf8"></div>
+        <div class="field"><label>Text / ink color</label><input id="tInk" placeholder="#14162b"></div>
+      </div>
+      <div class="field"><label>Avatar photo URL <span style="font-weight:400">(leave blank to use initials)</span></label><input id="tAvatarUrl" placeholder="https://..."></div>
+      <div class="save-row"><button class="btn btn-primary" id="saveThemeBtn">Save Appearance</button></div>
+    </div>
+
     <div class="panel">
       <h2>Live Stats <span class="hint">read-only</span></h2>
       <div class="stat-row">
@@ -184,13 +210,13 @@
 
   // ====== PASTE YOUR FIREBASE CONFIG HERE (same as index.html) ======
   const firebaseConfig = {
-    apiKey: "PASTE_YOUR_API_KEY",
-    authDomain: "PASTE_YOUR_AUTH_DOMAIN",
-    projectId: "PASTE_YOUR_PROJECT_ID",
-    storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
-    messagingSenderId: "PASTE_YOUR_SENDER_ID",
-    appId: "PASTE_YOUR_APP_ID",
-    measurementId: "PASTE_YOUR_MEASUREMENT_ID"
+    apiKey: "AIzaSyDt8cz0hSZ7JDHvj2Gspus2w5p9ggqn3AQ",
+    authDomain: "kundan-linktree.firebaseapp.com",
+    projectId: "kundan-linktree",
+    storageBucket: "kundan-linktree.firebasestorage.app",
+    messagingSenderId: "199056639982",
+    appId: "1:199056639982:web:c1ed8eb73a7f90b58030ff",
+    measurementId: "G-KMP7D8HBMS"
   };
   // ====================================================================
 
@@ -200,6 +226,7 @@
 
   const profileRef = doc(db, "profile", "main");
   const statsRef = doc(db, "stats", "main");
+  const themeRef = doc(db, "theme", "main");
   const linksCol = collection(db, "links");
   const certsCol = collection(db, "certifications");
 
@@ -277,6 +304,43 @@
       };
       await setDoc(profileRef, data, { merge: true });
       toast('Profile saved');
+    });
+
+    // preview refresh (usually unnecessary since the iframe has its own live
+    // Firestore listeners, but handy as a manual fallback)
+    document.getElementById('refreshPreviewBtn').addEventListener('click', () => {
+      const frame = document.getElementById('previewFrame');
+      frame.src = frame.src;
+    });
+
+    // theme / appearance form
+    getDoc(themeRef).then(snap => {
+      if(snap.exists()){
+        const t = snap.data();
+        document.getElementById('tBg').value = t.bg || '';
+        document.getElementById('tSurface').value = t.surface || '';
+        document.getElementById('tIndigo').value = t.indigo || '';
+        document.getElementById('tViolet').value = t.violet || '';
+        document.getElementById('tSky').value = t.sky || '';
+        document.getElementById('tInk').value = t.ink || '';
+        document.getElementById('tAvatarUrl').value = t.avatarImageUrl || '';
+      }
+    });
+
+    document.getElementById('saveThemeBtn').addEventListener('click', async () => {
+      const data = {
+        bg: document.getElementById('tBg').value.trim(),
+        surface: document.getElementById('tSurface').value.trim(),
+        indigo: document.getElementById('tIndigo').value.trim(),
+        violet: document.getElementById('tViolet').value.trim(),
+        sky: document.getElementById('tSky').value.trim(),
+        ink: document.getElementById('tInk').value.trim(),
+        avatarImageUrl: document.getElementById('tAvatarUrl').value.trim()
+      };
+      // drop empty fields so we don't overwrite good values with blanks
+      Object.keys(data).forEach(k => { if(!data[k]) delete data[k]; });
+      await setDoc(themeRef, data, { merge: true });
+      toast('Appearance saved — check the preview above');
     });
 
     // links list + form
@@ -459,6 +523,15 @@
       const statsSnap = await getDoc(statsRef);
       if(!statsSnap.exists()){
         await setDoc(statsRef, { profileViews: 0 });
+      }
+
+      const themeSnap = await getDoc(themeRef);
+      if(!themeSnap.exists()){
+        await setDoc(themeRef, {
+          bg: "#f4f6fc", surface: "#ffffff",
+          indigo: "#4f46e5", violet: "#8b5cf6", sky: "#38bdf8", ink: "#14162b",
+          avatarImageUrl: ""
+        });
       }
 
       const starterLinks = [
