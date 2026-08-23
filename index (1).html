@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kundan Kumar — Cybersecurity & SOC Analyst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f4f6fc; --surface: #ffffff; --border: rgba(19,22,41,0.08);
+    --ink: #14162b; --muted: #6b7280;
+    --indigo: #4f46e5; --sky: #38bdf8; --violet: #8b5cf6; --success: #16a34a;
+    --display: 'Sora', sans-serif; --body: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;} }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 800px 500px at 10% -10%, rgba(79,70,229,0.14), transparent 60%),
+      radial-gradient(ellipse 700px 600px at 105% 10%, rgba(56,189,248,0.16), transparent 55%),
+      radial-gradient(ellipse 600px 500px at 50% 115%, rgba(139,92,246,0.12), transparent 55%),
+      var(--bg);
+    color:var(--ink); font-family:var(--body);
+    display:flex; justify-content:center;
+    padding:52px 18px 70px;
+  }
+  .wrap{ width:100%; max-width:460px; }
+  .status-row{ display:flex; justify-content:center; margin-bottom:24px; }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    font-weight:600; font-size:12.5px; color:var(--success);
+    background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.22);
+    padding:6px 14px; border-radius:100px;
+  }
+  .status-pill .dot{ width:7px; height:7px; border-radius:50%; background:var(--success); animation:ping 2s infinite; }
+  @keyframes ping{ 0%{box-shadow:0 0 0 0 rgba(22,163,74,0.45);} 70%{box-shadow:0 0 0 7px rgba(22,163,74,0);} 100%{box-shadow:0 0 0 0 rgba(22,163,74,0);} }
+  .header{ text-align:center; margin-bottom:26px; }
+  .avatar{
+    width:96px; height:96px; margin:0 auto 18px; border-radius:28px;
+    background:linear-gradient(135deg, var(--indigo), var(--violet) 55%, var(--sky));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:700; font-size:32px; color:#fff;
+    box-shadow:0 14px 32px -12px rgba(79,70,229,0.45);
+  }
+  .name{ font-family:var(--display); font-weight:800; font-size:25px; letter-spacing:-0.01em; margin-bottom:6px; }
+  .title{ font-weight:600; font-size:13.5px; color:var(--indigo); margin-bottom:4px; }
+  .location{ font-size:12.5px; color:var(--muted); margin-bottom:14px; }
+  .bio{ font-size:13.5px; line-height:1.65; color:#3b3e52; max-width:360px; margin:0 auto 16px; }
+  .tags{ display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-bottom:4px; }
+  .tag{ font-size:11px; font-weight:600; color:var(--indigo); background:rgba(79,70,229,0.07); border:1px solid rgba(79,70,229,0.14); padding:4px 10px; border-radius:100px; }
+  .stats{ display:flex; align-items:center; justify-content:center; gap:22px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; margin:24px 0 22px; box-shadow:0 1px 2px rgba(19,22,41,0.03); }
+  .stat{ text-align:center; }
+  .stat-num{ font-family:var(--display); font-weight:700; font-size:18px; background:linear-gradient(135deg, var(--indigo), var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .stat-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+  .stat-divider{ width:1px; height:28px; background:var(--border); }
+  .live-tag{ display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:700; letter-spacing:0.06em; color:#e11d48; text-transform:uppercase; }
+  .live-tag .dot{ width:6px; height:6px; border-radius:50%; background:#e11d48; animation:ping 1.4s infinite; }
+  .section-label{ font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin:22px 0 10px 4px; }
+  .links{ display:flex; flex-direction:column; gap:10px; }
+  .card{
+    position:relative; display:flex; align-items:center; gap:13px; padding:13px 15px;
+    border-radius:14px; background:var(--surface); border:1px solid var(--border);
+    text-decoration:none; color:var(--ink);
+    opacity:0; transform:translateY(8px); animation:reveal 0.45s ease forwards;
+    transition:border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .card:hover{ transform:translateY(-2px); border-color:var(--indigo); box-shadow:0 10px 24px -10px rgba(79,70,229,0.35); }
+  @keyframes reveal{ to{ opacity:1; transform:translateY(0); } }
+  .card-icon{ width:38px; height:38px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; background:linear-gradient(135deg, var(--icon-a, #4f46e5), var(--icon-b, #8b5cf6)); color:#fff; }
+  .card-body{ flex:1; min-width:0; }
+  .card-title{ font-family:var(--display); font-weight:600; font-size:14px; margin-bottom:1px; }
+  .card-sub{ font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-count{ font-size:10.5px; font-weight:700; color:var(--indigo); background:rgba(79,70,229,0.08); padding:3px 9px; border-radius:100px; flex-shrink:0; min-width:34px; text-align:center; }
+  .cert-box{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-top:4px; }
+  .cert-item{ display:flex; align-items:center; gap:9px; font-size:12.5px; color:#3b3e52; padding:6px 0; }
+  .cert-item:not(:last-child){ border-bottom:1px dashed var(--border); }
+  .cert-check{ font-weight:700; flex-shrink:0; }
+  .cert-check.done{ color:var(--success); }
+  .cert-check.progress{ color:#d97706; }
+  .footer{ text-align:center; margin-top:34px; font-size:11px; color:var(--muted); }
+  .footer .rule{ width:50px; height:1px; background:var(--border); margin:0 auto 14px; }
+  .footer a{ color:var(--muted); }
+  .empty-state{ text-align:center; color:var(--muted); font-size:12.5px; padding:20px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="status-row" id="statusRow"></div>
+  <div class="header" id="headerBlock">
+    <div class="avatar" id="avatarEl">–</div>
+    <div class="name" id="nameEl">Loading…</div>
+    <div class="title" id="titleEl"></div>
+    <div class="location" id="locationEl"></div>
+    <div class="bio" id="bioEl"></div>
+    <div class="tags" id="tagsEl"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="statViews">–</div><div class="stat-label">Profile Views</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-num" id="statClicks">–</div><div class="stat-label">Total Clicks</div></div>
+    <div class="stat-divider"></div>
+    <div class="live-tag"><span class="dot"></span>Live</div>
+  </div>
+
+  <div id="linksContainer"></div>
+
+  <div class="section-label" id="certLabel" style="display:none">Certifications</div>
+  <div class="cert-box" id="certBox" style="display:none"></div>
+
+  <div class="footer">
+    <div class="rule"></div>
+    <span id="footerText">Kundan Kumar · Hyderabad, Telangana</span> · <a href="./admin.html">admin</a>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot,
+    collection, query, orderBy, increment
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+  // ====== PASTE YOUR FIREBASE CONFIG HERE ======
+  const firebaseConfig = {
+    apiKey: "PASTE_YOUR_API_KEY",
+    authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+    projectId: "PASTE_YOUR_PROJECT_ID",
+    storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+    messagingSenderId: "PASTE_YOUR_SENDER_ID",
+    appId: "PASTE_YOUR_APP_ID",
+    measurementId: "PASTE_YOUR_MEASUREMENT_ID"
+  };
+  // ==============================================
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  let analytics;
+  try { analytics = getAnalytics(app); } catch(e) { /* analytics unavailable (e.g. no measurementId yet) */ }
+
+  const profileRef = doc(db, "profile", "main");
+  const statsRef = doc(db, "stats", "main");
+  const linksQuery = query(collection(db, "links"), orderBy("order", "asc"));
+  const certsQuery = query(collection(db, "certifications"), orderBy("order", "asc"));
+
+  // ---- render profile ----
+  onSnapshot(profileRef, (snap) => {
+    if(!snap.exists()) return;
+    const p = snap.data();
+    document.getElementById('avatarEl').textContent = p.avatarInitials || '';
+    document.getElementById('nameEl').textContent = p.name || '';
+    document.getElementById('titleEl').textContent = p.title || '';
+    document.getElementById('locationEl').textContent = p.location ? `📍 ${p.location}` : '';
+    document.getElementById('bioEl').textContent = p.bio || '';
+    document.getElementById('footerText').textContent = `${p.name || ''} · ${p.location || ''}`;
+
+    const tagsEl = document.getElementById('tagsEl');
+    tagsEl.innerHTML = (p.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('');
+
+    const statusRow = document.getElementById('statusRow');
+    statusRow.innerHTML = p.status
+      ? `<span class="status-pill"><span class="dot"></span>${escapeHtml(p.status)}</span>`
+      : '';
+  });
+
+  // ---- render links, grouped by section in order ----
+  let clickTotals = {};
+  onSnapshot(linksQuery, (snap) => {
+    const container = document.getElementById('linksContainer');
+    if(snap.empty){
+      container.innerHTML = '<div class="empty-state">No links added yet. Add some from the admin panel.</div>';
+      updateClickTotal();
+      return;
+    }
+    let html = '';
+    let lastSection = null;
+    clickTotals = {};
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      if(d.active === false) return;
+      if(d.section !== lastSection){
+        html += `<div class="section-label">${escapeHtml(d.section || '')}</div><div class="links">`;
+        if(lastSection !== null) html = html; // sections auto-close below
+        lastSection = d.section;
+      }
+      clickTotals[docSnap.id] = d.clicks || 0;
+      html += `
+        <a class="card" data-id="${docSnap.id}" href="${escapeAttr(d.url)}" target="_blank" rel="noopener" style="--icon-a:${d.colorA||'#4f46e5'}; --icon-b:${d.colorB||'#8b5cf6'}">
+          <span class="card-icon">${d.icon || '🔗'}</span>
+          <span class="card-body">
+            <span class="card-title">${escapeHtml(d.title || '')}</span>
+            <span class="card-sub">${escapeHtml(d.subtitle || '')}</span>
+          </span>
+          <span class="card-count">${d.clicks || 0}</span>
+        </a>`;
+    });
+    // naive close of link groups: wrap whole thing by rebuilding with proper closes
+    html = rebuildGroupedHtml(snap);
+    container.innerHTML = html;
+
+    // attach click handlers
+    container.querySelectorAll('.card[data-id]').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-id');
+        const ref = doc(db, "links", id);
+        updateDoc(ref, { clicks: increment(1) }).catch(()=>{});
+        if(analytics) logEvent(analytics, 'link_click', { link_id: id });
+      });
+    });
+
+    updateClickTotal();
+  });
+
+  function rebuildGroupedHtml(snap){
+    let out = '';
+    let lastSection = null;
+    let open = false;
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      if(d.active === false) return;
+      if(d.section !== lastSection){
+        if(open) out += '</div>';
+        out += `<div class="section-label">${escapeHtml(d.section || '')}</div><div class="links">`;
+        open = true;
+        lastSection = d.section;
+      }
+      out += `
+        <a class="card" data-id="${docSnap.id}" href="${escapeAttr(d.url)}" target="_blank" rel="noopener" style="--icon-a:${d.colorA||'#4f46e5'}; --icon-b:${d.colorB||'#8b5cf6'}">
+          <span class="card-icon">${d.icon || '🔗'}</span>
+          <span class="card-body">
+            <span class="card-title">${escapeHtml(d.title || '')}</span>
+            <span class="card-sub">${escapeHtml(d.subtitle || '')}</span>
+          </span>
+          <span class="card-count">${d.clicks || 0}</span>
+        </a>`;
+    });
+    if(open) out += '</div>';
+    return out;
+  }
+
+  function updateClickTotal(){
+    const total = Object.values(clickTotals).reduce((a,b)=>a+b,0);
+    document.getElementById('statClicks').textContent = total;
+  }
+
+  // ---- render certifications ----
+  onSnapshot(certsQuery, (snap) => {
+    const box = document.getElementById('certBox');
+    const label = document.getElementById('certLabel');
+    if(snap.empty){ box.style.display='none'; label.style.display='none'; return; }
+    label.style.display='block';
+    box.style.display='block';
+    let html = '';
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const cls = d.status === 'done' ? 'done' : 'progress';
+      const mark = d.status === 'done' ? '✓' : '⏳';
+      html += `<div class="cert-item"><span class="cert-check ${cls}">${mark}</span> ${escapeHtml(d.text||'')}</div>`;
+    });
+    box.innerHTML = html;
+  });
+
+  // ---- profile view counter ----
+  (async function trackView(){
+    try{
+      const snap = await getDoc(statsRef);
+      if(snap.exists()){
+        await updateDoc(statsRef, { profileViews: increment(1) });
+      } else {
+        // stats doc not seeded yet — skip silently until admin seeds it
+      }
+    }catch(e){ /* ignore, keep page working even if this fails */ }
+  })();
+
+  onSnapshot(statsRef, (snap) => {
+    if(snap.exists()){
+      document.getElementById('statViews').textContent = snap.data().profileViews || 0;
+    }
+  });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function escapeAttr(str){ return escapeHtml(str); }
+</script>
+
+</body>
+</html>
