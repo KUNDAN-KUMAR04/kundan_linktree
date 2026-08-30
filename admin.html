@@ -113,7 +113,7 @@
         <div class="field"><label>Accent — Sky</label><input id="tSky" placeholder="#38bdf8"></div>
         <div class="field"><label>Text / ink color</label><input id="tInk" placeholder="#14162b"></div>
       </div>
-      <div class="field"><label>Avatar photo URL <span style="font-weight:400">(leave blank to use initials)</span></label><input id="tAvatarUrl" placeholder="https://..."></div>
+      <div class="field"><label>Avatar photo URL <span style="font-weight:400">(leave blank to use your resume photo)</span></label><input id="tAvatarUrl" placeholder="https://..."></div>
       <div class="save-row"><button class="btn btn-primary" id="saveThemeBtn">Save Appearance</button></div>
     </div>
 
@@ -147,6 +147,7 @@
 
     <div class="panel">
       <h2>Links <span class="hint" id="linksCount"></span></h2>
+      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Use ↑ / ↓ on any item to move it up or down — whatever you want a recruiter to see first, move to the top.</p>
       <div id="linksList"></div>
       <div class="empty-note hidden" id="linksEmpty">No links yet.</div>
 
@@ -208,7 +209,7 @@
     getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // ====== PASTE YOUR FIREBASE CONFIG HERE (same as index.html) ======
+  // ====== FIREBASE CONFIG (same as index.html) ======
   const firebaseConfig = {
     apiKey: "AIzaSyDt8cz0hSZ7JDHvj2Gspus2w5p9ggqn3AQ",
     authDomain: "kundan-linktree.firebaseapp.com",
@@ -218,7 +219,7 @@
     appId: "1:199056639982:web:c1ed8eb73a7f90b58030ff",
     measurementId: "G-KMP7D8HBMS"
   };
-  // ====================================================================
+  // ====================================================
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -344,15 +345,18 @@
     });
 
     // links list + form
+    let currentLinkDocs = [];
     onSnapshot(query(linksCol, orderBy("order","asc")), (snap) => {
       const list = document.getElementById('linksList');
       const empty = document.getElementById('linksEmpty');
       document.getElementById('linksCount').textContent = `(${snap.size})`;
+      currentLinkDocs = [];
+      snap.forEach(docSnap => currentLinkDocs.push({ id: docSnap.id, data: docSnap.data() }));
       if(snap.empty){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
       let html = '';
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
+      currentLinkDocs.forEach((item, idx) => {
+        const d = item.data;
         html += `
           <div class="item-row">
             <div class="item-row-top">
@@ -361,13 +365,22 @@
                 <div class="meta">${escapeHtml(d.section||'')} · order ${d.order ?? ''} · ${d.clicks||0} clicks</div>
               </div>
               <div class="item-actions">
-                <button class="btn" data-edit-link="${docSnap.id}">Edit</button>
-                <button class="btn btn-danger" data-del-link="${docSnap.id}">Delete</button>
+                <button class="btn" data-move-link-up="${item.id}" ${idx===0?'disabled':''} title="Move up">↑</button>
+                <button class="btn" data-move-link-down="${item.id}" ${idx===currentLinkDocs.length-1?'disabled':''} title="Move down">↓</button>
+                <button class="btn" data-edit-link="${item.id}">Edit</button>
+                <button class="btn btn-danger" data-del-link="${item.id}">Delete</button>
               </div>
             </div>
           </div>`;
       });
       list.innerHTML = html;
+
+      list.querySelectorAll('[data-move-link-up]').forEach(btn => {
+        btn.addEventListener('click', () => moveLink(btn.getAttribute('data-move-link-up'), 'up'));
+      });
+      list.querySelectorAll('[data-move-link-down]').forEach(btn => {
+        btn.addEventListener('click', () => moveLink(btn.getAttribute('data-move-link-down'), 'down'));
+      });
 
       list.querySelectorAll('[data-edit-link]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -396,7 +409,24 @@
           toast('Link deleted');
         });
       });
+
+      // keep the "Order" field on the add form sensible for the next new item
+      if(!document.getElementById('lEditId').value){
+        const maxOrder = currentLinkDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+        document.getElementById('lOrder').value = maxOrder + 10;
+      }
     });
+
+    async function moveLink(id, direction){
+      const idx = currentLinkDocs.findIndex(x => x.id === id);
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if(idx === -1 || swapIdx < 0 || swapIdx >= currentLinkDocs.length) return;
+      const a = currentLinkDocs[idx], b = currentLinkDocs[swapIdx];
+      const aOrder = a.data.order ?? 100;
+      const bOrder = b.data.order ?? 100;
+      await updateDoc(doc(db,"links",a.id), { order: bOrder });
+      await updateDoc(doc(db,"links",b.id), { order: aOrder });
+    }
 
     function resetLinkForm(){
       document.getElementById('lEditId').value = '';
@@ -432,14 +462,17 @@
     });
 
     // certifications list + form
+    let currentCertDocs = [];
     onSnapshot(query(certsCol, orderBy("order","asc")), (snap) => {
       const list = document.getElementById('certsList');
       const empty = document.getElementById('certsEmpty');
+      currentCertDocs = [];
+      snap.forEach(docSnap => currentCertDocs.push({ id: docSnap.id, data: docSnap.data() }));
       if(snap.empty){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
       let html = '';
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
+      currentCertDocs.forEach((item, idx) => {
+        const d = item.data;
         html += `
           <div class="item-row">
             <div class="item-row-top">
@@ -448,13 +481,22 @@
                 <div class="meta">${d.status==='done'?'Completed':'In progress'} · order ${d.order ?? ''}</div>
               </div>
               <div class="item-actions">
-                <button class="btn" data-edit-cert="${docSnap.id}">Edit</button>
-                <button class="btn btn-danger" data-del-cert="${docSnap.id}">Delete</button>
+                <button class="btn" data-move-cert-up="${item.id}" ${idx===0?'disabled':''} title="Move up">↑</button>
+                <button class="btn" data-move-cert-down="${item.id}" ${idx===currentCertDocs.length-1?'disabled':''} title="Move down">↓</button>
+                <button class="btn" data-edit-cert="${item.id}">Edit</button>
+                <button class="btn btn-danger" data-del-cert="${item.id}">Delete</button>
               </div>
             </div>
           </div>`;
       });
       list.innerHTML = html;
+
+      list.querySelectorAll('[data-move-cert-up]').forEach(btn => {
+        btn.addEventListener('click', () => moveCert(btn.getAttribute('data-move-cert-up'), 'up'));
+      });
+      list.querySelectorAll('[data-move-cert-down]').forEach(btn => {
+        btn.addEventListener('click', () => moveCert(btn.getAttribute('data-move-cert-down'), 'down'));
+      });
 
       list.querySelectorAll('[data-edit-cert]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -477,7 +519,23 @@
           toast('Certification deleted');
         });
       });
+
+      if(!document.getElementById('cEditId').value){
+        const maxOrder = currentCertDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+        document.getElementById('cOrder').value = maxOrder + 10;
+      }
     });
+
+    async function moveCert(id, direction){
+      const idx = currentCertDocs.findIndex(x => x.id === id);
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if(idx === -1 || swapIdx < 0 || swapIdx >= currentCertDocs.length) return;
+      const a = currentCertDocs[idx], b = currentCertDocs[swapIdx];
+      const aOrder = a.data.order ?? 100;
+      const bOrder = b.data.order ?? 100;
+      await updateDoc(doc(db,"certifications",a.id), { order: bOrder });
+      await updateDoc(doc(db,"certifications",b.id), { order: aOrder });
+    }
 
     function resetCertForm(){
       document.getElementById('cEditId').value = '';
@@ -535,23 +593,35 @@
       }
 
       const starterLinks = [
-        { section:"Contact", icon:"✉️", title:"Email — Primary", subtitle:"kundan7259kumar@gmail.com", url:"mailto:kundan7259kumar@gmail.com", colorA:"#4f46e5", colorB:"#8b5cf6", order:10, clicks:0, active:true },
-        { section:"Contact", icon:"🎓", title:"Email — College", subtitle:"21x35a6204+siiet@gmail.com", url:"mailto:21x35a6204+siiet@gmail.com", colorA:"#38bdf8", colorB:"#4f46e5", order:20, clicks:0, active:true },
-        { section:"Contact", icon:"📞", title:"Call", subtitle:"+91 73820 48432", url:"tel:+917382048432", colorA:"#16a34a", colorB:"#38bdf8", order:30, clicks:0, active:true },
-        { section:"Contact", icon:"💬", title:"WhatsApp", subtitle:"+91 73820 48432", url:"https://wa.me/917382048432", colorA:"#22c55e", colorB:"#16a34a", order:40, clicks:0, active:true },
-        { section:"Professional", icon:"💼", title:"LinkedIn", subtitle:"Professional profile & network", url:"https://www.linkedin.com/in/kundan-kumar00/", colorA:"#0a66c2", colorB:"#38bdf8", order:50, clicks:0, active:true },
-        { section:"Professional", icon:"🖥️", title:"GitHub", subtitle:"Projects: GhostMask, Flow App Bot & more", url:"https://github.com/Kundan725922", colorA:"#14162b", colorB:"#4f46e5", order:60, clicks:0, active:true },
-        { section:"Professional", icon:"📄", title:"Resume / CV", subtitle:"Download full resume (PDF)", url:"https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk", colorA:"#8b5cf6", colorB:"#4f46e5", order:70, clicks:0, active:true },
-        { section:"Cybersecurity Practice", icon:"🛡️", title:"TryHackMe", subtitle:"CTFs & offensive security practice", url:"https://tryhackme.com/p/KUN2001", colorA:"#c026d3", colorB:"#8b5cf6", order:80, clicks:0, active:true },
-        { section:"Cybersecurity Practice", icon:"💻", title:"HackerRank", subtitle:"Coding & problem-solving profile", url:"https://www.hackerrank.com/profile/shivkundank0", colorA:"#16a34a", colorB:"#38bdf8", order:90, clicks:0, active:true }
+        { section:"Contact", icon:"✉️", title:"Email", subtitle:"shivkundank0@gmail.com", url:"mailto:shivkundank0@gmail.com", colorA:"#4f46e5", colorB:"#8b5cf6", order:10, clicks:0, active:true },
+        { section:"Contact", icon:"📞", title:"Call", subtitle:"+91 73820 48432", url:"tel:+917382048432", colorA:"#16a34a", colorB:"#38bdf8", order:20, clicks:0, active:true },
+        { section:"Contact", icon:"💬", title:"WhatsApp", subtitle:"+91 73820 48432", url:"https://wa.me/917382048432", colorA:"#22c55e", colorB:"#16a34a", order:30, clicks:0, active:true },
+        { section:"Professional", icon:"💼", title:"LinkedIn", subtitle:"linkedin.com/in/kundan-kumar00", url:"https://www.linkedin.com/in/kundan-kumar00/", colorA:"#0a66c2", colorB:"#38bdf8", order:40, clicks:0, active:true },
+        { section:"Professional", icon:"💼", title:"LinkedIn (Alt)", subtitle:"linkedin.com/in/kundan-kumar0", url:"https://www.linkedin.com/in/kundan-kumar0/", colorA:"#0a66c2", colorB:"#38bdf8", order:50, clicks:0, active:true },
+        { section:"Professional", icon:"🖥️", title:"GitHub", subtitle:"github.com/KUNDAN-KUMAR04", url:"https://github.com/KUNDAN-KUMAR04", colorA:"#14162b", colorB:"#4f46e5", order:60, clicks:0, active:true },
+        { section:"Professional", icon:"🖥️", title:"GitHub (Personal)", subtitle:"github.com/Kundan725922", url:"https://github.com/Kundan725922", colorA:"#14162b", colorB:"#4f46e5", order:70, clicks:0, active:true },
+        { section:"Professional", icon:"🖥️", title:"GitHub (Alt)", subtitle:"github.com/kundan72592201", url:"https://github.com/kundan72592201", colorA:"#14162b", colorB:"#4f46e5", order:80, clicks:0, active:true },
+        { section:"Professional", icon:"📄", title:"Resume / CV", subtitle:"View on Google Drive", url:"https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk", colorA:"#8b5cf6", colorB:"#4f46e5", order:90, clicks:0, active:true },
+        { section:"Cybersecurity Practice", icon:"🛡️", title:"TryHackMe", subtitle:"tryhackme.com/p/KUN2001", url:"https://tryhackme.com/p/KUN2001", colorA:"#c026d3", colorB:"#8b5cf6", order:100, clicks:0, active:true },
+        { section:"Cybersecurity Practice", icon:"💻", title:"HackerRank", subtitle:"hackerrank.com/profile/shivkundank0", url:"https://www.hackerrank.com/profile/shivkundank0", colorA:"#16a34a", colorB:"#38bdf8", order:110, clicks:0, active:true },
+        { section:"Experience", icon:"🛡️", title:"Cybersecurity Intern — Skillogic", subtitle:"Vulnerability assessment, pentesting, Nmap, Burp Suite", url:"#", colorA:"#0ea5e9", colorB:"#38bdf8", order:120, clicks:0, active:true },
+        { section:"Experience", icon:"🎯", title:"Ethical Hacking Internship", subtitle:"Feb 27 – Mar 8, 2022 · ISO 9001 Certified · Guided by Sabir Banu", url:"#", colorA:"#0ea5e9", colorB:"#38bdf8", order:130, clicks:0, active:true },
+        { section:"Education", icon:"🎓", title:"B.Tech CSE (Cyber Security)", subtitle:"SIIET, Sheriguda, Telangana · JNTUH · 2021–2024", url:"#", colorA:"#4338ca", colorB:"#818cf8", order:140, clicks:0, active:true },
+        { section:"Education", icon:"🎓", title:"Diploma, Mechanical Engineering", subtitle:"T.R.R College of Polytechnic, Telangana · SBTET · 2021", url:"#", colorA:"#4338ca", colorB:"#818cf8", order:150, clicks:0, active:true },
+        { section:"Education", icon:"🎓", title:"SSC", subtitle:"Jnansi High School, Telangana · 2018", url:"#", colorA:"#4338ca", colorB:"#818cf8", order:160, clicks:0, active:true }
       ];
       for(const link of starterLinks){ await addDoc(linksCol, link); }
 
       const starterCerts = [
         { text:"Google Cybersecurity Professional Certificate", status:"done", order:10 },
         { text:"Cybersecurity Awareness Training — Cybrary", status:"done", order:20 },
-        { text:"Cyber Forensics Certification — Great Learning", status:"done", order:30 },
-        { text:"CompTIA Security+, OSCP", status:"progress", order:40 }
+        { text:"Cyber Forensics Certification — Great Learning (Dec 2022)", status:"done", order:30 },
+        { text:"Techgyan Hackathon — IIT Hyderabad (Jun 2025)", status:"done", order:40 },
+        { text:"Ethical Hacking Workshop — Techgyan Technologies, IIT Hyderabad", status:"done", order:50 },
+        { text:"Android App Development Workshop — IIT Hyderabad (Jun 2025)", status:"done", order:60 },
+        { text:"HackDefence Summit 2026 — Registered Participant (Feb 2026)", status:"done", order:70 },
+        { text:"CompTIA Security+ (In Progress)", status:"progress", order:80 },
+        { text:"OSCP (In Progress)", status:"progress", order:90 }
       ];
       for(const cert of starterCerts){ await addDoc(certsCol, cert); }
 
