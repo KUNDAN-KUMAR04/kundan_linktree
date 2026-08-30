@@ -85,6 +85,15 @@
   .footer .rule{ width:50px; height:1px; background:var(--border); margin:0 auto 14px; }
   .footer a{ color:var(--muted); }
   .empty-state{ text-align:center; color:var(--muted); font-size:12.5px; padding:20px; }
+  .quick-actions{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 22px; }
+  .quick-btn{
+    display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+    color:var(--indigo); background:rgba(79,70,229,0.07); border:1px solid rgba(79,70,229,0.18);
+    padding:8px 14px; border-radius:100px; text-decoration:none; transition:transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .quick-btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px -8px rgba(79,70,229,0.35); }
+  .about-box{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 17px; margin:4px 0 4px; }
+  .about-box p{ font-size:13px; line-height:1.7; color:#3b3e52; }
 </style>
 </head>
 <body>
@@ -101,6 +110,8 @@
     <div class="tags" id="tagsEl"></div>
   </div>
 
+  <div class="quick-actions" id="quickActions"></div>
+
   <div class="stats">
     <div class="stat"><div class="stat-num" id="statViews">–</div><div class="stat-label">Profile Views</div></div>
     <div class="stat-divider"></div>
@@ -109,6 +120,9 @@
     <div class="live-tag"><span class="dot"></span>Live</div>
   </div>
 
+  <div class="section-label" id="aboutLabel" style="display:none">About</div>
+  <div class="about-box" id="aboutBox" style="display:none"></div>
+
   <div id="linksContainer"></div>
 
   <div class="section-label" id="certLabel" style="display:none">Certifications</div>
@@ -116,7 +130,7 @@
 
   <div class="footer">
     <div class="rule"></div>
-    <span id="footerText">Kundan Kumar · Hyderabad, Telangana</span> · <a href="./admin.html">admin</a>
+    <span id="footerText">Kundan Kumar · Hyderabad, Telangana</span>
   </div>
 </div>
 
@@ -162,7 +176,8 @@
     location: "Hyderabad, Telangana, India",
     bio: "B.Tech Cybersecurity student skilled in network security, penetration testing, digital forensics and full-stack development. TryHackMe active participant. Preparing for GATE CSE 2026.",
     tags: ["Network Security", "Penetration Testing", "Digital Forensics", "Python", "SOC Analyst", "TryHackMe"],
-    status: "Open to SOC Analyst roles"
+    status: "Open to SOC Analyst roles",
+    aboutExtended: "I'm a Cybersecurity engineering student with hands-on experience across vulnerability assessment, penetration testing, malware analysis and digital forensics — backed by a full-stack development background in Node.js, React and Firebase. My recent work spans a hyper-heuristic SVM model for big data threat detection, a browser fingerprint-spoofing extension (GhostMask), and an anomaly-detection system for suspicious behavior. I'm an active TryHackMe and HackerRank participant, currently preparing for GATE CSE 2026, and genuinely enjoy the analytical, detail-driven side of security work — evaluating threats methodically and building tools that make defense easier. Outside of security, I follow AI and ML research closely and like exploring new frameworks and languages."
   };
 
   const DEFAULT_LINKS = [
@@ -199,9 +214,16 @@
   ];
   // ================================================================
 
+  const DEFAULT_QUICK_LINKS = {
+    resumeUrl: "https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk",
+    cvUrl: "https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk",
+    certificatesUrl: ""
+  };
+
   // ---- render theme (colors, background, avatar image) live ----
   // Shows the resume photo by default; a Firestore theme.avatarImageUrl (once seeded) overrides it.
   applyAvatar(DEFAULT_AVATAR_URL);
+  renderQuickActions(DEFAULT_QUICK_LINKS);
   onSnapshot(themeRef, (snap) => {
     if(!snap.exists()) return;
     const t = snap.data();
@@ -216,8 +238,25 @@
     if(t.iconSize) root.setProperty('--icon-size', t.iconSize + 'px');
     if(t.maxWidth) root.setProperty('--page-max-width', t.maxWidth + 'px');
 
+    renderQuickActions({
+      resumeUrl: t.resumeUrl !== undefined ? t.resumeUrl : DEFAULT_QUICK_LINKS.resumeUrl,
+      cvUrl: t.cvUrl !== undefined ? t.cvUrl : DEFAULT_QUICK_LINKS.cvUrl,
+      certificatesUrl: t.certificatesUrl !== undefined ? t.certificatesUrl : DEFAULT_QUICK_LINKS.certificatesUrl
+    });
+
     applyAvatar(t.avatarImageUrl || DEFAULT_AVATAR_URL);
   });
+
+  function renderQuickActions(t){
+    const box = document.getElementById('quickActions');
+    const buttons = [];
+    if(t.resumeUrl) buttons.push({ label: "Resume", icon: "📄", url: t.resumeUrl });
+    if(t.cvUrl && t.cvUrl !== t.resumeUrl) buttons.push({ label: "CV", icon: "📋", url: t.cvUrl });
+    if(t.certificatesUrl) buttons.push({ label: "Certificates", icon: "🏅", url: t.certificatesUrl });
+    box.innerHTML = buttons.map(b =>
+      `<a class="quick-btn" href="${escapeAttr(b.url)}" target="_blank" rel="noopener">${b.icon} ${escapeHtml(b.label)}</a>`
+    ).join('');
+  }
 
   function applyAvatar(url){
     const avatarEl = document.getElementById('avatarEl');
@@ -253,6 +292,17 @@
     statusRow.innerHTML = p.status
       ? `<span class="status-pill"><span class="dot"></span>${escapeHtml(p.status)}</span>`
       : '';
+
+    const aboutBox = document.getElementById('aboutBox');
+    const aboutLabel = document.getElementById('aboutLabel');
+    if(p.aboutExtended){
+      aboutLabel.style.display = 'block';
+      aboutBox.style.display = 'block';
+      aboutBox.innerHTML = `<p>${escapeHtml(p.aboutExtended)}</p>`;
+    } else {
+      aboutLabel.style.display = 'none';
+      aboutBox.style.display = 'none';
+    }
   }
 
   // ---- render links, grouped by section in order (falls back to resume defaults) ----

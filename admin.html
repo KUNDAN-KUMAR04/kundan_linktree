@@ -151,6 +151,15 @@
     </div>
 
     <div class="panel">
+      <h2>Quick Buttons <span class="hint">shown near the top of your page</span></h2>
+      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Leave a field blank to hide that button on the live page. If CV and Resume point to the same file, only one button shows.</p>
+      <div class="field"><label>Resume URL</label><input id="qResumeUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="field"><label>CV URL</label><input id="qCvUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="field"><label>Certificates URL</label><input id="qCertificatesUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="save-row"><button class="btn btn-primary" id="saveQuickBtn">Save Quick Buttons</button></div>
+    </div>
+
+    <div class="panel">
       <h2>Profile</h2>
       <div class="field"><label>Name</label><input id="pName"></div>
       <div class="grid-2">
@@ -158,7 +167,8 @@
         <div class="field"><label>Location</label><input id="pLocation"></div>
       </div>
       <div class="field"><label>Status pill (e.g. "Open to SOC Analyst roles")</label><input id="pStatus"></div>
-      <div class="field"><label>Bio</label><textarea id="pBio"></textarea></div>
+      <div class="field"><label>Bio (short)</label><textarea id="pBio"></textarea></div>
+      <div class="field"><label>About Me (longer — shown in its own "About" section)</label><textarea id="pAbout" style="min-height:110px"></textarea></div>
       <div class="field"><label>Tags (comma separated)</label><input id="pTags"></div>
       <div class="field"><label>Avatar initials</label><input id="pAvatar" maxlength="3" style="max-width:100px"></div>
       <div class="save-row"><button class="btn btn-primary" id="saveProfileBtn">Save Profile</button></div>
@@ -307,6 +317,7 @@
         document.getElementById('pLocation').value = p.location || '';
         document.getElementById('pStatus').value = p.status || '';
         document.getElementById('pBio').value = p.bio || '';
+        document.getElementById('pAbout').value = p.aboutExtended || '';
         document.getElementById('pTags').value = (p.tags || []).join(', ');
         document.getElementById('pAvatar').value = p.avatarInitials || '';
       }
@@ -319,11 +330,29 @@
         location: document.getElementById('pLocation').value.trim(),
         status: document.getElementById('pStatus').value.trim(),
         bio: document.getElementById('pBio').value.trim(),
+        aboutExtended: document.getElementById('pAbout').value.trim(),
         tags: document.getElementById('pTags').value.split(',').map(s=>s.trim()).filter(Boolean),
         avatarInitials: document.getElementById('pAvatar').value.trim()
       };
       await setDoc(profileRef, data, { merge: true });
       toast('Profile saved');
+    });
+
+    // quick buttons (resume / CV / certificates)
+    getDoc(themeRef).then(snap => {
+      const t = snap.exists() ? snap.data() : {};
+      document.getElementById('qResumeUrl').value = t.resumeUrl || '';
+      document.getElementById('qCvUrl').value = t.cvUrl || '';
+      document.getElementById('qCertificatesUrl').value = t.certificatesUrl || '';
+    });
+
+    document.getElementById('saveQuickBtn').addEventListener('click', async () => {
+      await setDoc(themeRef, {
+        resumeUrl: document.getElementById('qResumeUrl').value.trim(),
+        cvUrl: document.getElementById('qCvUrl').value.trim(),
+        certificatesUrl: document.getElementById('qCertificatesUrl').value.trim()
+      }, { merge: true });
+      toast('Quick buttons saved');
     });
 
     // preview refresh (usually unnecessary since the iframe has its own live
@@ -820,6 +849,7 @@
         location: "Hyderabad, Telangana",
         status: "Open to SOC Analyst / Cybersecurity roles",
         bio: "Cybersecurity graduate skilled in VAPT, malware analysis, digital forensics and full-stack development. Seeking a SOC Analyst / Cybersecurity Analyst role to put these skills to work.",
+        aboutExtended: "I'm a Cybersecurity engineering student with hands-on experience across vulnerability assessment, penetration testing, malware analysis and digital forensics — backed by a full-stack development background in Node.js, React and Firebase. My recent work spans a hyper-heuristic SVM model for big data threat detection, a browser fingerprint-spoofing extension (GhostMask), and an anomaly-detection system for suspicious behavior. I'm an active TryHackMe and HackerRank participant, currently preparing for GATE CSE 2026, and genuinely enjoy the analytical, detail-driven side of security work.",
         tags: ["VAPT","Malware Analysis","Python","React / Node.js","Linux"],
         avatarInitials: "KK"
       }, { merge: true });
@@ -834,7 +864,10 @@
         await setDoc(themeRef, {
           bg: "#f4f6fc", surface: "#ffffff",
           indigo: "#4f46e5", violet: "#8b5cf6", sky: "#38bdf8", ink: "#14162b",
-          avatarImageUrl: "", avatarSize: 96, iconSize: 38, maxWidth: 460
+          avatarImageUrl: "", avatarSize: 96, iconSize: 38, maxWidth: 460,
+          resumeUrl: "https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk",
+          cvUrl: "https://drive.google.com/file/d/1WVy7oJOWUpF21LCgPnoRQS_Tka5Xzuv5/view?usp=drivesdk",
+          certificatesUrl: ""
         });
       }
 
