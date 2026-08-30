@@ -72,6 +72,10 @@
   .section-header .sname{ font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--indigo); }
   .section-header .sactions{ display:flex; gap:4px; }
   .section-header .sactions button{ font-size:10.5px; padding:4px 7px; }
+  .id-badge{ font-family:monospace; font-size:9.5px; color:var(--muted); background:rgba(19,22,41,0.05); padding:1px 5px; border-radius:5px; }
+  .inline-edit{ margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
+  .inline-edit .grid-2{ margin-bottom:10px; }
+  .inline-edit .field{ margin-bottom:10px; }
   .hidden{ display:none !important; }
   .empty-note{ color:var(--muted); font-size:12.5px; text-align:center; padding:14px; }
   .toast{
@@ -107,14 +111,96 @@
 
     <div class="panel" id="previewPanel">
       <h2>Live Preview <span class="hint">updates automatically as you edit</span></h2>
+      <p style="font-size:12px; color:var(--muted); margin:-8px 0 12px;">This is a <b>read-only</b> mirror of your public page — it just shows how it looks. To actually add, edit, delete, or reorder anything, use the panels below.</p>
       <div style="border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#eef0f7;">
         <iframe id="previewFrame" src="./index.html" style="width:100%; height:640px; border:0; display:block;"></iframe>
       </div>
-      <div class="save-row"><button class="btn" id="refreshPreviewBtn">Refresh preview</button></div>
+      <div class="save-row" style="justify-content:space-between; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="jumpLinksBtn">↓ Edit Links</button>
+          <button class="btn" id="jumpCertsBtn">↓ Edit Certifications</button>
+          <button class="btn" id="jumpProfileBtn">↓ Edit Profile</button>
+        </div>
+        <button class="btn" id="refreshPreviewBtn">Refresh preview</button>
+      </div>
+    </div>
+
+    <div class="panel" id="linksPanel">
+      <h2>Links <span class="hint" id="linksCount"></span></h2>
+      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Click <b>Edit</b> on any item to change it right there — no scrolling. Drag <b>⠿</b> to move anywhere, even into a different section, or use ⤒/↑/↓/⤓. Each item shows its ID so you always know exactly what you're editing.</p>
+      <div id="linksList"></div>
+      <div class="empty-note hidden" id="linksEmpty">No links yet — add your first one below.</div>
+
+      <div style="border-top:1px dashed var(--border); margin-top:14px; padding-top:14px;">
+        <p style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:10px;">Add a new link</p>
+        <div class="grid-2">
+          <div class="field"><label>Section</label><input id="lSection" placeholder="e.g. Contact, Professional"></div>
+          <div class="field"><label>Icon (emoji)</label><input id="lIcon" placeholder="🔗"></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Title</label><input id="lTitle" placeholder="e.g. GitHub"></div>
+          <div class="field"><label>Subtitle</label><input id="lSubtitle" placeholder="short description"></div>
+        </div>
+        <div class="field"><label>URL</label><input id="lUrl" placeholder="https://..."></div>
+        <div class="grid-2">
+          <div class="field"><label>Color A (hex)</label><input id="lColorA" placeholder="#4f46e5"></div>
+          <div class="field"><label>Color B (hex)</label><input id="lColorB" placeholder="#8b5cf6"></div>
+        </div>
+        <div class="field"><label>Order (number, lower = higher up)</label><input id="lOrder" type="number" value="100"></div>
+        <div class="save-row">
+          <button class="btn" id="lCancelBtn">Clear</button>
+          <button class="btn btn-primary" id="lSaveBtn">Add Link</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="certsPanel">
+      <h2>Certifications</h2>
+      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Click <b>Edit</b> on any item to change it right there — no scrolling. Drag <b>⠿</b> or use ⤒/↑/↓/⤓ to reorder.</p>
+      <div id="certsList"></div>
+      <div class="empty-note hidden" id="certsEmpty">No certifications yet — add your first one below.</div>
+      <div style="border-top:1px dashed var(--border); margin-top:14px; padding-top:14px;">
+        <p style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:10px;">Add a new certification</p>
+        <div class="field"><label>Text</label><input id="cText" placeholder="e.g. Google Cybersecurity Professional Certificate"></div>
+        <div class="grid-2">
+          <div class="field"><label>Status</label>
+            <select id="cStatus"><option value="done">Completed</option><option value="progress">In progress</option></select>
+          </div>
+          <div class="field"><label>Order</label><input id="cOrder" type="number" value="100"></div>
+        </div>
+        <div class="save-row">
+          <button class="btn" id="cCancelBtn">Clear</button>
+          <button class="btn btn-primary" id="cSaveBtn">Add Certification</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="profilePanel">
+      <h2>Profile <span class="hint"><span class="id-badge">profile/main</span></span></h2>
+      <div class="field"><label>Name</label><input id="pName"></div>
+      <div class="grid-2">
+        <div class="field"><label>Title</label><input id="pTitle"></div>
+        <div class="field"><label>Location</label><input id="pLocation"></div>
+      </div>
+      <div class="field"><label>Status pill (e.g. "Open to SOC Analyst roles")</label><input id="pStatus"></div>
+      <div class="field"><label>Bio (short)</label><textarea id="pBio"></textarea></div>
+      <div class="field"><label>About Me (longer — shown in its own "About" section)</label><textarea id="pAbout" style="min-height:110px"></textarea></div>
+      <div class="field"><label>Tags (comma separated)</label><input id="pTags"></div>
+      <div class="field"><label>Avatar initials</label><input id="pAvatar" maxlength="3" style="max-width:100px"></div>
+      <div class="save-row"><button class="btn btn-primary" id="saveProfileBtn">Save Profile</button></div>
     </div>
 
     <div class="panel">
-      <h2>Appearance <span class="hint">changes reflect on the live page instantly</span></h2>
+      <h2>Quick Buttons <span class="hint">shown near the top of your page · <span class="id-badge">theme/main</span></span></h2>
+      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Leave a field blank to hide that button on the live page. If CV and Resume point to the same file, only one button shows.</p>
+      <div class="field"><label>Resume URL</label><input id="qResumeUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="field"><label>CV URL</label><input id="qCvUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="field"><label>Certificates URL</label><input id="qCertificatesUrl" placeholder="https://drive.google.com/..."></div>
+      <div class="save-row"><button class="btn btn-primary" id="saveQuickBtn">Save Quick Buttons</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>Appearance <span class="hint">changes reflect on the live page instantly · <span class="id-badge">theme/main</span></span></h2>
       <div class="grid-2">
         <div class="field"><label>Background base color</label><input id="tBg" placeholder="#f4f6fc"></div>
         <div class="field"><label>Card / surface color</label><input id="tSurface" placeholder="#ffffff"></div>
@@ -148,79 +234,6 @@
       <h2>First time here? <span class="hint">seeds starter content</span></h2>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">If your Firestore is empty, click below to load your existing profile, links and certifications as a starting point. Safe to run once — running again will not duplicate the stats counter but will re-add default links/certs.</p>
       <button class="btn btn-primary" id="seedBtn">Load starter content</button>
-    </div>
-
-    <div class="panel">
-      <h2>Quick Buttons <span class="hint">shown near the top of your page</span></h2>
-      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Leave a field blank to hide that button on the live page. If CV and Resume point to the same file, only one button shows.</p>
-      <div class="field"><label>Resume URL</label><input id="qResumeUrl" placeholder="https://drive.google.com/..."></div>
-      <div class="field"><label>CV URL</label><input id="qCvUrl" placeholder="https://drive.google.com/..."></div>
-      <div class="field"><label>Certificates URL</label><input id="qCertificatesUrl" placeholder="https://drive.google.com/..."></div>
-      <div class="save-row"><button class="btn btn-primary" id="saveQuickBtn">Save Quick Buttons</button></div>
-    </div>
-
-    <div class="panel">
-      <h2>Profile</h2>
-      <div class="field"><label>Name</label><input id="pName"></div>
-      <div class="grid-2">
-        <div class="field"><label>Title</label><input id="pTitle"></div>
-        <div class="field"><label>Location</label><input id="pLocation"></div>
-      </div>
-      <div class="field"><label>Status pill (e.g. "Open to SOC Analyst roles")</label><input id="pStatus"></div>
-      <div class="field"><label>Bio (short)</label><textarea id="pBio"></textarea></div>
-      <div class="field"><label>About Me (longer — shown in its own "About" section)</label><textarea id="pAbout" style="min-height:110px"></textarea></div>
-      <div class="field"><label>Tags (comma separated)</label><input id="pTags"></div>
-      <div class="field"><label>Avatar initials</label><input id="pAvatar" maxlength="3" style="max-width:100px"></div>
-      <div class="save-row"><button class="btn btn-primary" id="saveProfileBtn">Save Profile</button></div>
-    </div>
-
-    <div class="panel">
-      <h2>Links <span class="hint" id="linksCount"></span></h2>
-      <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Drag <b>⠿</b> to move any item anywhere — even into a different section. Or use ⤒/↑/↓/⤓. Section headers have their own move/delete controls.</p>
-      <div id="linksList"></div>
-      <div class="empty-note hidden" id="linksEmpty">No links yet.</div>
-
-      <div style="border-top:1px dashed var(--border); margin-top:14px; padding-top:14px;">
-        <div class="grid-2">
-          <div class="field"><label>Section</label><input id="lSection" placeholder="e.g. Contact, Professional"></div>
-          <div class="field"><label>Icon (emoji)</label><input id="lIcon" placeholder="🔗"></div>
-        </div>
-        <div class="grid-2">
-          <div class="field"><label>Title</label><input id="lTitle" placeholder="e.g. GitHub"></div>
-          <div class="field"><label>Subtitle</label><input id="lSubtitle" placeholder="short description"></div>
-        </div>
-        <div class="field"><label>URL</label><input id="lUrl" placeholder="https://..."></div>
-        <div class="grid-2">
-          <div class="field"><label>Color A (hex)</label><input id="lColorA" placeholder="#4f46e5"></div>
-          <div class="field"><label>Color B (hex)</label><input id="lColorB" placeholder="#8b5cf6"></div>
-        </div>
-        <div class="field"><label>Order (number, lower = higher up)</label><input id="lOrder" type="number" value="100"></div>
-        <input type="hidden" id="lEditId">
-        <div class="save-row">
-          <button class="btn" id="lCancelBtn">Cancel edit</button>
-          <button class="btn btn-primary" id="lSaveBtn">Add Link</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Certifications</h2>
-      <div id="certsList"></div>
-      <div class="empty-note hidden" id="certsEmpty">No certifications yet.</div>
-      <div style="border-top:1px dashed var(--border); margin-top:14px; padding-top:14px;">
-        <div class="field"><label>Text</label><input id="cText" placeholder="e.g. Google Cybersecurity Professional Certificate"></div>
-        <div class="grid-2">
-          <div class="field"><label>Status</label>
-            <select id="cStatus"><option value="done">Completed</option><option value="progress">In progress</option></select>
-          </div>
-          <div class="field"><label>Order</label><input id="cOrder" type="number" value="100"></div>
-        </div>
-        <input type="hidden" id="cEditId">
-        <div class="save-row">
-          <button class="btn" id="cCancelBtn">Cancel edit</button>
-          <button class="btn btn-primary" id="cSaveBtn">Add Certification</button>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -362,6 +375,16 @@
       frame.src = frame.src;
     });
 
+    document.getElementById('jumpLinksBtn').addEventListener('click', () => {
+      document.getElementById('linksPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('jumpCertsBtn').addEventListener('click', () => {
+      document.getElementById('certsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('jumpProfileBtn').addEventListener('click', () => {
+      document.getElementById('profilePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     // theme / appearance form
     getDoc(themeRef).then(snap => {
       if(snap.exists()){
@@ -411,6 +434,7 @@
     // links list + form — full drag & drop, cross-section moves, section-level controls
     let currentLinkDocs = [];
     let draggedLinkId = null;
+    let openLinkEditId = null;
 
     function groupLinksBySection(docs){
       const groups = [];
@@ -523,14 +547,15 @@
           </div>`;
         g.items.forEach(item => {
           const d = item.data;
+          const isOpen = openLinkEditId === item.id;
           html += `
-            <div class="item-row" draggable="true" data-link-id="${item.id}">
+            <div class="item-row" draggable="${!isOpen}" data-link-id="${item.id}">
               <div class="item-row-top">
                 <div class="item-row-left">
                   <span class="drag-handle" title="Drag to move anywhere">⠿</span>
                   <div>
                     <div class="name">${d.icon || '🔗'} ${escapeHtml(d.title||'')}</div>
-                    <div class="meta">order ${d.order ?? ''} · ${d.clicks||0} clicks</div>
+                    <div class="meta">order ${d.order ?? ''} · ${d.clicks||0} clicks · <span class="id-badge">links/${item.id}</span></div>
                   </div>
                 </div>
                 <div class="item-actions">
@@ -538,10 +563,30 @@
                   <button class="btn" data-move-link-up="${item.id}" title="Move up">↑</button>
                   <button class="btn" data-move-link-down="${item.id}" title="Move down">↓</button>
                   <button class="btn" data-bottom-link="${item.id}" title="Move to bottom">⤓</button>
-                  <button class="btn" data-edit-link="${item.id}">Edit</button>
+                  <button class="btn ${isOpen?'btn-primary':''}" data-edit-link="${item.id}">${isOpen?'Close':'Edit'}</button>
                   <button class="btn btn-danger" data-del-link="${item.id}">Delete</button>
                 </div>
               </div>
+              ${isOpen ? `
+              <div class="inline-edit" data-inline-edit-link="${item.id}">
+                <div class="grid-2">
+                  <div class="field"><label>Section</label><input id="ie-l-section-${item.id}" value="${escapeAttr(d.section||'')}"></div>
+                  <div class="field"><label>Icon (emoji)</label><input id="ie-l-icon-${item.id}" value="${escapeAttr(d.icon||'')}"></div>
+                </div>
+                <div class="grid-2">
+                  <div class="field"><label>Title</label><input id="ie-l-title-${item.id}" value="${escapeAttr(d.title||'')}"></div>
+                  <div class="field"><label>Subtitle</label><input id="ie-l-subtitle-${item.id}" value="${escapeAttr(d.subtitle||'')}"></div>
+                </div>
+                <div class="field"><label>URL</label><input id="ie-l-url-${item.id}" value="${escapeAttr(d.url||'')}"></div>
+                <div class="grid-2">
+                  <div class="field"><label>Color A (hex)</label><input id="ie-l-colora-${item.id}" value="${escapeAttr(d.colorA||'')}"></div>
+                  <div class="field"><label>Color B (hex)</label><input id="ie-l-colorb-${item.id}" value="${escapeAttr(d.colorB||'')}"></div>
+                </div>
+                <div class="save-row">
+                  <button class="btn" data-cancel-inline-link="${item.id}">Cancel</button>
+                  <button class="btn btn-primary" data-save-inline-link="${item.id}">Save Changes</button>
+                </div>
+              </div>` : ''}
             </div>`;
         });
       });
@@ -556,29 +601,41 @@
       list.querySelectorAll('[data-move-link-up]').forEach(btn => btn.addEventListener('click', () => moveLink(btn.getAttribute('data-move-link-up'), 'up')));
       list.querySelectorAll('[data-move-link-down]').forEach(btn => btn.addEventListener('click', () => moveLink(btn.getAttribute('data-move-link-down'), 'down')));
 
+      // Edit toggles an inline form right inside the item — no scrolling, no separate page.
       list.querySelectorAll('[data-edit-link]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-edit-link');
-          const snap = await getDoc(doc(db,"links",id));
-          if(!snap.exists()) return;
-          const d = snap.data();
-          document.getElementById('lEditId').value = id;
-          document.getElementById('lSection').value = d.section || '';
-          document.getElementById('lIcon').value = d.icon || '';
-          document.getElementById('lTitle').value = d.title || '';
-          document.getElementById('lSubtitle').value = d.subtitle || '';
-          document.getElementById('lUrl').value = d.url || '';
-          document.getElementById('lColorA').value = d.colorA || '';
-          document.getElementById('lColorB').value = d.colorB || '';
-          document.getElementById('lOrder').value = d.order ?? 100;
-          document.getElementById('lSaveBtn').textContent = 'Update Link';
-          window.scrollTo({top: document.getElementById('lSection').offsetTop, behavior:'smooth'});
+          openLinkEditId = (openLinkEditId === id) ? null : id;
+          renderLinksListUI();
         });
       });
+      list.querySelectorAll('[data-cancel-inline-link]').forEach(btn => {
+        btn.addEventListener('click', () => { openLinkEditId = null; renderLinksListUI(); });
+      });
+      list.querySelectorAll('[data-save-inline-link]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-save-inline-link');
+          const data = {
+            section: document.getElementById(`ie-l-section-${id}`).value.trim(),
+            icon: document.getElementById(`ie-l-icon-${id}`).value.trim(),
+            title: document.getElementById(`ie-l-title-${id}`).value.trim(),
+            subtitle: document.getElementById(`ie-l-subtitle-${id}`).value.trim(),
+            url: document.getElementById(`ie-l-url-${id}`).value.trim(),
+            colorA: document.getElementById(`ie-l-colora-${id}`).value.trim(),
+            colorB: document.getElementById(`ie-l-colorb-${id}`).value.trim()
+          };
+          if(!data.title || !data.url){ toast('Title and URL are required'); return; }
+          await updateDoc(doc(db,"links",id), data);
+          openLinkEditId = null;
+          toast('Link updated');
+        });
+      });
+
       list.querySelectorAll('[data-del-link]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-del-link');
           if(!confirm('Delete this link?')) return;
+          if(openLinkEditId === id) openLinkEditId = null;
           await deleteDoc(doc(db,"links",id));
           toast('Link deleted');
         });
@@ -623,10 +680,8 @@
       });
 
       // keep the "Order" field on the add form sensible for the next new item
-      if(!document.getElementById('lEditId').value){
-        const maxOrder = currentLinkDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
-        document.getElementById('lOrder').value = maxOrder + 10;
-      }
+      const maxOrder = currentLinkDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+      document.getElementById('lOrder').value = maxOrder + 10;
     }
 
     onSnapshot(query(linksCol, orderBy("order","asc")), (snap) => {
@@ -636,15 +691,13 @@
     });
 
     function resetLinkForm(){
-      document.getElementById('lEditId').value = '';
       ['lSection','lIcon','lTitle','lSubtitle','lUrl','lColorA','lColorB'].forEach(id => document.getElementById(id).value='');
-      document.getElementById('lOrder').value = 100;
-      document.getElementById('lSaveBtn').textContent = 'Add Link';
+      const maxOrder = currentLinkDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+      document.getElementById('lOrder').value = maxOrder + 10;
     }
     document.getElementById('lCancelBtn').addEventListener('click', resetLinkForm);
 
     document.getElementById('lSaveBtn').addEventListener('click', async () => {
-      const editId = document.getElementById('lEditId').value;
       const data = {
         section: document.getElementById('lSection').value.trim(),
         icon: document.getElementById('lIcon').value.trim(),
@@ -654,23 +707,19 @@
         colorA: document.getElementById('lColorA').value.trim(),
         colorB: document.getElementById('lColorB').value.trim(),
         order: Number(document.getElementById('lOrder').value) || 100,
+        clicks: 0,
         active: true
       };
       if(!data.title || !data.url){ toast('Title and URL are required'); return; }
-      if(editId){
-        await updateDoc(doc(db,"links",editId), data);
-        toast('Link updated');
-      } else {
-        data.clicks = 0;
-        await addDoc(linksCol, data);
-        toast('Link added');
-      }
+      await addDoc(linksCol, data);
+      toast('Link added');
       resetLinkForm();
     });
 
-    // certifications list + form — drag & drop + quick move controls
+    // certifications list + form — drag & drop + inline editing, no scrolling
     let currentCertDocs = [];
     let draggedCertId = null;
+    let openCertEditId = null;
 
     async function commitCertOrder(newDocsArray){
       const updates = [];
@@ -729,14 +778,15 @@
       let html = '';
       currentCertDocs.forEach(item => {
         const d = item.data;
+        const isOpen = openCertEditId === item.id;
         html += `
-          <div class="item-row" draggable="true" data-cert-id="${item.id}">
+          <div class="item-row" draggable="${!isOpen}" data-cert-id="${item.id}">
             <div class="item-row-top">
               <div class="item-row-left">
                 <span class="drag-handle" title="Drag to move anywhere">⠿</span>
                 <div>
                   <div class="name">${d.status==='done'?'✓':'⏳'} ${escapeHtml(d.text||'')}</div>
-                  <div class="meta">${d.status==='done'?'Completed':'In progress'} · order ${d.order ?? ''}</div>
+                  <div class="meta">${d.status==='done'?'Completed':'In progress'} · order ${d.order ?? ''} · <span class="id-badge">certifications/${item.id}</span></div>
                 </div>
               </div>
               <div class="item-actions">
@@ -744,10 +794,26 @@
                 <button class="btn" data-move-cert-up="${item.id}" title="Move up">↑</button>
                 <button class="btn" data-move-cert-down="${item.id}" title="Move down">↓</button>
                 <button class="btn" data-bottom-cert="${item.id}" title="Move to bottom">⤓</button>
-                <button class="btn" data-edit-cert="${item.id}">Edit</button>
+                <button class="btn ${isOpen?'btn-primary':''}" data-edit-cert="${item.id}">${isOpen?'Close':'Edit'}</button>
                 <button class="btn btn-danger" data-del-cert="${item.id}">Delete</button>
               </div>
             </div>
+            ${isOpen ? `
+            <div class="inline-edit" data-inline-edit-cert="${item.id}">
+              <div class="field"><label>Text</label><input id="ie-c-text-${item.id}" value="${escapeAttr(d.text||'')}"></div>
+              <div class="grid-2">
+                <div class="field"><label>Status</label>
+                  <select id="ie-c-status-${item.id}">
+                    <option value="done" ${d.status==='done'?'selected':''}>Completed</option>
+                    <option value="progress" ${d.status==='progress'?'selected':''}>In progress</option>
+                  </select>
+                </div>
+              </div>
+              <div class="save-row">
+                <button class="btn" data-cancel-inline-cert="${item.id}">Cancel</button>
+                <button class="btn btn-primary" data-save-inline-cert="${item.id}">Save Changes</button>
+              </div>
+            </div>` : ''}
           </div>`;
       });
       list.innerHTML = html;
@@ -758,22 +824,34 @@
       list.querySelectorAll('[data-move-cert-down]').forEach(btn => btn.addEventListener('click', () => moveCert(btn.getAttribute('data-move-cert-down'), 'down')));
 
       list.querySelectorAll('[data-edit-cert]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-edit-cert');
-          const snap = await getDoc(doc(db,"certifications",id));
-          if(!snap.exists()) return;
-          const d = snap.data();
-          document.getElementById('cEditId').value = id;
-          document.getElementById('cText').value = d.text || '';
-          document.getElementById('cStatus').value = d.status || 'done';
-          document.getElementById('cOrder').value = d.order ?? 100;
-          document.getElementById('cSaveBtn').textContent = 'Update Certification';
+          openCertEditId = (openCertEditId === id) ? null : id;
+          renderCertsListUI();
         });
       });
+      list.querySelectorAll('[data-cancel-inline-cert]').forEach(btn => {
+        btn.addEventListener('click', () => { openCertEditId = null; renderCertsListUI(); });
+      });
+      list.querySelectorAll('[data-save-inline-cert]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-save-inline-cert');
+          const data = {
+            text: document.getElementById(`ie-c-text-${id}`).value.trim(),
+            status: document.getElementById(`ie-c-status-${id}`).value
+          };
+          if(!data.text){ toast('Text is required'); return; }
+          await updateDoc(doc(db,"certifications",id), data);
+          openCertEditId = null;
+          toast('Certification updated');
+        });
+      });
+
       list.querySelectorAll('[data-del-cert]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-del-cert');
           if(!confirm('Delete this certification?')) return;
+          if(openCertEditId === id) openCertEditId = null;
           await deleteDoc(doc(db,"certifications",id));
           toast('Certification deleted');
         });
@@ -799,10 +877,8 @@
         });
       });
 
-      if(!document.getElementById('cEditId').value){
-        const maxOrder = currentCertDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
-        document.getElementById('cOrder').value = maxOrder + 10;
-      }
+      const maxOrder = currentCertDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+      document.getElementById('cOrder').value = maxOrder + 10;
     }
 
     onSnapshot(query(certsCol, orderBy("order","asc")), (snap) => {
@@ -811,31 +887,23 @@
       renderCertsListUI();
     });
 
-
     function resetCertForm(){
-      document.getElementById('cEditId').value = '';
       document.getElementById('cText').value = '';
       document.getElementById('cStatus').value = 'done';
-      document.getElementById('cOrder').value = 100;
-      document.getElementById('cSaveBtn').textContent = 'Add Certification';
+      const maxOrder = currentCertDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
+      document.getElementById('cOrder').value = maxOrder + 10;
     }
     document.getElementById('cCancelBtn').addEventListener('click', resetCertForm);
 
     document.getElementById('cSaveBtn').addEventListener('click', async () => {
-      const editId = document.getElementById('cEditId').value;
       const data = {
         text: document.getElementById('cText').value.trim(),
         status: document.getElementById('cStatus').value,
         order: Number(document.getElementById('cOrder').value) || 100
       };
       if(!data.text){ toast('Text is required'); return; }
-      if(editId){
-        await updateDoc(doc(db,"certifications",editId), data);
-        toast('Certification updated');
-      } else {
-        await addDoc(certsCol, data);
-        toast('Certification added');
-      }
+      await addDoc(certsCol, data);
+      toast('Certification added');
       resetCertForm();
     });
 
