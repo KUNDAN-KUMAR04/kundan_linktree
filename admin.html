@@ -15,9 +15,9 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{ background:var(--bg); color:var(--ink); font-family:var(--body); min-height:100vh; }
-  .topbar{ display:flex; justify-content:space-between; align-items:center; padding:16px 24px; background:var(--surface); border-bottom:1px solid var(--border); }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; padding:16px 24px; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
   .topbar h1{ font-family:var(--display); font-size:16px; font-weight:700; }
-  .topbar .actions{ display:flex; gap:10px; align-items:center; }
+  .topbar .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .btn{ font-family:var(--body); font-size:13px; font-weight:600; padding:8px 14px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--ink); cursor:pointer; }
   .btn:hover{ border-color:var(--indigo); color:var(--indigo); }
   .btn-primary{ background:linear-gradient(135deg, var(--indigo), var(--violet)); color:#fff; border:none; }
@@ -47,14 +47,19 @@
   .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .save-row{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
 
-  .stat-row{ display:flex; gap:16px; margin-bottom:6px; }
-  .stat-chip{ background:rgba(79,70,229,0.07); border:1px solid rgba(79,70,229,0.15); border-radius:10px; padding:10px 14px; text-align:center; flex:1; }
+  .stat-row{ display:flex; gap:16px; margin-bottom:6px; flex-wrap:wrap; }
+  .stat-chip{ background:rgba(79,70,229,0.07); border:1px solid rgba(79,70,229,0.15); border-radius:10px; padding:10px 14px; text-align:center; flex:1; min-width:120px; }
   .stat-chip .n{ font-family:var(--display); font-weight:700; font-size:18px; color:var(--indigo); }
+  .stat-chip .n.top-link-name{ font-size:12.5px; line-height:1.3; white-space:normal; word-break:break-word; }
   .stat-chip .l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+
+  .search-row{ margin-bottom:12px; }
+  .search-row input{ width:100%; padding:9px 12px; border-radius:9px; border:1px solid var(--border); font-family:var(--body); font-size:13px; background:#fff; }
 
   .item-row{ border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:var(--surface); transition:transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; }
   .item-row.dragging{ opacity:0.4; }
   .item-row.drag-over{ box-shadow:0 0 0 2px var(--indigo); transform:translateY(1px); }
+  .item-row.filtered-out{ display:none; }
   .item-row-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; }
   .item-row-top .name{ font-weight:600; font-size:13.5px; }
   .item-row-top .meta{ font-size:11px; color:var(--muted); }
@@ -102,6 +107,7 @@
   <div class="topbar">
     <h1>Linktree Admin</h1>
     <div class="actions">
+      <button class="btn" id="copyLiveLinkBtn">🔗 Copy public link</button>
       <a class="btn" href="./index.html" target="_blank">View live page</a>
       <button class="btn" id="logoutBtn">Log out</button>
     </div>
@@ -125,11 +131,22 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h2>Live Stats <span class="hint">read-only</span></h2>
+      <div class="stat-row">
+        <div class="stat-chip"><div class="n" id="adminViews">–</div><div class="l">Profile Views</div></div>
+        <div class="stat-chip"><div class="n" id="adminClicks">–</div><div class="l">Total Clicks</div></div>
+        <div class="stat-chip"><div class="n top-link-name" id="adminTopLink">–</div><div class="l">Top Link</div></div>
+      </div>
+    </div>
+
     <div class="panel" id="linksPanel">
       <h2>Links <span class="hint" id="linksCount"></span></h2>
       <p style="font-size:11.5px; color:var(--muted); margin:-8px 0 12px;">Click <b>Edit</b> on any item to change it right there — no scrolling. Drag <b>⠿</b> to move anywhere, even into a different section, or use ⤒/↑/↓/⤓. Each item shows its ID so you always know exactly what you're editing.</p>
+      <div class="search-row"><input type="text" id="linkSearch" placeholder="🔍 Search links by title, subtitle, or section..."></div>
       <div id="linksList"></div>
       <div class="empty-note hidden" id="linksEmpty">No links yet — add your first one below.</div>
+      <div class="empty-note hidden" id="linksNoMatch">No links match your search.</div>
 
       <div style="border-top:1px dashed var(--border); margin-top:14px; padding-top:14px;">
         <p style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:10px;">Add a new link</p>
@@ -223,11 +240,9 @@
     </div>
 
     <div class="panel">
-      <h2>Live Stats <span class="hint">read-only</span></h2>
-      <div class="stat-row">
-        <div class="stat-chip"><div class="n" id="adminViews">–</div><div class="l">Profile Views</div></div>
-        <div class="stat-chip"><div class="n" id="adminClicks">–</div><div class="l">Total Clicks</div></div>
-      </div>
+      <h2>Backup & Restore <span class="hint">local JSON export</span></h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">Download a snapshot of your profile, links, certifications, and theme as a JSON file — handy before making big changes, or just to keep a copy for yourself.</p>
+      <button class="btn btn-primary" id="exportBackupBtn">⬇ Export Backup (JSON)</button>
     </div>
 
     <div class="panel">
@@ -245,7 +260,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot,
-    collection, query, orderBy, addDoc
+    collection, query, orderBy, addDoc, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import {
     getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
@@ -267,6 +282,8 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
+  const PUBLIC_URL = "https://kundan-kumar04.github.io/kundan_linktree/";
+
   const profileRef = doc(db, "profile", "main");
   const statsRef = doc(db, "stats", "main");
   const themeRef = doc(db, "theme", "main");
@@ -279,6 +296,35 @@
     t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2200);
   }
+
+  // ---- number formatting: 1200 -> 1.2K, 2500000 -> 2.5M, etc ----
+  function formatCount(n){
+    n = Number(n) || 0;
+    if (n < 1000) return String(n);
+    const units = [
+      { value: 1e9, suffix: 'B' },
+      { value: 1e6, suffix: 'M' },
+      { value: 1e3, suffix: 'K' }
+    ];
+    for (const u of units) {
+      if (n >= u.value) {
+        let num = Math.floor((n / u.value) * 10) / 10;
+        const str = (num % 1 === 0) ? num.toFixed(0) : num.toFixed(1);
+        return str + u.suffix;
+      }
+    }
+    return String(n);
+  }
+
+  // ---- copy public link ----
+  document.getElementById('copyLiveLinkBtn').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(PUBLIC_URL);
+      toast('Public link copied');
+    }catch(e){
+      toast('Could not copy — copy manually: ' + PUBLIC_URL);
+    }
+  });
 
   // ---- auth ----
   document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -311,14 +357,21 @@
     if(initialized) return;
     initialized = true;
 
-    // live stats
+    // live stats (views, total clicks, top link)
     onSnapshot(statsRef, (snap) => {
-      document.getElementById('adminViews').textContent = snap.exists() ? (snap.data().profileViews || 0) : 0;
+      document.getElementById('adminViews').textContent = formatCount(snap.exists() ? (snap.data().profileViews || 0) : 0);
     });
     onSnapshot(query(linksCol, orderBy("order","asc")), (snap) => {
       let total = 0;
-      snap.forEach(d => total += (d.data().clicks || 0));
-      document.getElementById('adminClicks').textContent = total;
+      let top = null;
+      snap.forEach(d => {
+        const data = d.data();
+        const clicks = data.clicks || 0;
+        total += clicks;
+        if(clicks > 0 && (!top || clicks > top.clicks)) top = { title: data.title || 'Untitled', clicks };
+      });
+      document.getElementById('adminClicks').textContent = formatCount(total);
+      document.getElementById('adminTopLink').textContent = top ? `${top.title} (${formatCount(top.clicks)})` : '—';
     });
 
     // profile form
@@ -431,10 +484,74 @@
       toast('Appearance saved — check the preview above');
     });
 
+    // ---- backup export (profile, links, certs, theme) as a downloadable JSON file ----
+    document.getElementById('exportBackupBtn').addEventListener('click', async () => {
+      try{
+        const [profileSnap, themeSnap, linksSnap, certsSnap] = await Promise.all([
+          getDoc(profileRef),
+          getDoc(themeRef),
+          getDocs(query(linksCol, orderBy("order","asc"))),
+          getDocs(query(certsCol, orderBy("order","asc")))
+        ]);
+        const backup = {
+          exportedAt: new Date().toISOString(),
+          profile: profileSnap.exists() ? profileSnap.data() : null,
+          theme: themeSnap.exists() ? themeSnap.data() : null,
+          links: linksSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+          certifications: certsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `linktree-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast('Backup downloaded');
+      }catch(e){
+        toast('Backup failed — see console');
+        console.error(e);
+      }
+    });
+
     // links list + form — full drag & drop, cross-section moves, section-level controls
     let currentLinkDocs = [];
     let draggedLinkId = null;
     let openLinkEditId = null;
+    let linkSearchTerm = '';
+
+    document.getElementById('linkSearch').addEventListener('input', (e) => {
+      linkSearchTerm = e.target.value.trim().toLowerCase();
+      applyLinkSearchFilter();
+    });
+
+    function applyLinkSearchFilter(){
+      const list = document.getElementById('linksList');
+      const rows = list.querySelectorAll('.item-row[data-link-id]');
+      let anyVisible = false;
+      rows.forEach(row => {
+        const id = row.getAttribute('data-link-id');
+        const item = currentLinkDocs.find(x => x.id === id);
+        const haystack = item ? `${item.data.title||''} ${item.data.subtitle||''} ${item.data.section||''}`.toLowerCase() : '';
+        const matches = !linkSearchTerm || haystack.includes(linkSearchTerm);
+        row.classList.toggle('filtered-out', !matches);
+        if(matches) anyVisible = true;
+      });
+      // hide section headers whose whole group is filtered out
+      list.querySelectorAll('.section-header[data-section-header]').forEach(header => {
+        const sectionName = header.getAttribute('data-section-header');
+        const sectionRows = Array.from(rows).filter(r => {
+          const id = r.getAttribute('data-link-id');
+          const item = currentLinkDocs.find(x => x.id === id);
+          return item && (item.data.section || '(No section)') === sectionName;
+        });
+        const anySectionVisible = sectionRows.some(r => !r.classList.contains('filtered-out'));
+        header.classList.toggle('filtered-out', !anySectionVisible);
+      });
+      document.getElementById('linksNoMatch').classList.toggle('hidden', anyVisible || !linkSearchTerm || currentLinkDocs.length === 0);
+    }
 
     function groupLinksBySection(docs){
       const groups = [];
@@ -530,7 +647,7 @@
       const list = document.getElementById('linksList');
       const empty = document.getElementById('linksEmpty');
       document.getElementById('linksCount').textContent = `(${currentLinkDocs.length})`;
-      if(currentLinkDocs.length === 0){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
+      if(currentLinkDocs.length === 0){ list.innerHTML=''; empty.classList.remove('hidden'); document.getElementById('linksNoMatch').classList.add('hidden'); return; }
       empty.classList.add('hidden');
 
       const groups = groupLinksBySection(currentLinkDocs);
@@ -555,7 +672,7 @@
                   <span class="drag-handle" title="Drag to move anywhere">⠿</span>
                   <div>
                     <div class="name">${d.icon || '🔗'} ${escapeHtml(d.title||'')}</div>
-                    <div class="meta">order ${d.order ?? ''} · ${d.clicks||0} clicks · <span class="id-badge">links/${item.id}</span></div>
+                    <div class="meta">order ${d.order ?? ''} · ${formatCount(d.clicks||0)} clicks · <span class="id-badge">links/${item.id}</span></div>
                   </div>
                 </div>
                 <div class="item-actions">
@@ -682,6 +799,8 @@
       // keep the "Order" field on the add form sensible for the next new item
       const maxOrder = currentLinkDocs.reduce((m, x) => Math.max(m, x.data.order ?? 0), 0);
       document.getElementById('lOrder').value = maxOrder + 10;
+
+      applyLinkSearchFilter();
     }
 
     onSnapshot(query(linksCol, orderBy("order","asc")), (snap) => {
